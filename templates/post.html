@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<br>
+<hr>
+<h1>BLOG</h1>
+<hr>
+<div class="blog">
+    <div class="blog-title">
+        <h3>{{current_post.title}}</h3>
+    </div>
+    <p>{{current_post.blog_post}}</p>
+</div>
+{% endblock %}

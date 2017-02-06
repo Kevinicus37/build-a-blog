@@ -41,12 +41,20 @@ class Blog(db.Model):
     created = db.DateTimeProperty(auto_now_add = True)
 
 class MainPage(Handler):
-    def render_front(self, title="", blog_post="", error=""):
+    def render_front(self):
         blogs = db.GqlQuery('SELECT * FROM Blog '
                           'ORDER BY created DESC '
                           'LIMIT 5')
 
-        self.render('base.html', title=title, blog_post=blog_post, error=error, blogs=blogs)
+        self.render('blog.html', blogs=blogs)
+
+    def get(self):
+        self.render_front()
+
+
+class NewPost(Handler):
+    def render_front(self, title="", blog_post="", error=""):
+        self.render('newpost.html', title=title, blog_post=blog_post, error=error)
 
     def get(self):
         self.render_front()
@@ -58,12 +66,20 @@ class MainPage(Handler):
         if title and blog_post:
             a = Blog(title = title, blog_post=blog_post)
             a.put()
-
-            self.redirect("/")
+            id=str(a.key().id())
+            self.redirect("/blog/" + id)
         else:
             error = "we need both a title and a blog submission!"
             self.render_front(title=title, blog_post=blog_post, error=error)
 
+class ViewPostHandler(Handler):
+    def get(self, id):
+        id=int(id)
+        current_post = Blog.get_by_id(id)
+        self.render('post.html', current_post=current_post)
+        #self.response.write(id)
+
 app = webapp2.WSGIApplication([
-    ('/', MainPage)
+    ('/', MainPage), ('/newpost', NewPost),
+    webapp2.Route('/blog/<id:\d+>', ViewPostHandler)
 ], debug=True)
