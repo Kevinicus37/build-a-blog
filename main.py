@@ -23,6 +23,11 @@ from google.appengine.ext import db
 template_dir = os.path.join(os.path.dirname(__file__), 'templates')
 jinja_env = jinja2.Environment(loader = jinja2.FileSystemLoader(template_dir),
                                autoescape = True)
+def get_posts(limit, offset):
+    blogs = db.GqlQuery('SELECT * FROM Blog '
+                        'ORDER BY created DESC '
+                        'LIMIT ' + str(limit) + ' OFFSET ' + str(offset))
+    return blogs
 
 class Handler(webapp2.RequestHandler):
     def write(self, *a, **kw):
@@ -41,15 +46,32 @@ class Blog(db.Model):
     created = db.DateTimeProperty(auto_now_add = True)
 
 class MainPage(Handler):
-    def render_front(self):
-        blogs = db.GqlQuery('SELECT * FROM Blog '
-                          'ORDER BY created DESC '
-                          'LIMIT 5')
+    def get(self):
+        self.redirect('/blog')
 
-        self.render('blog.html', blogs=blogs)
+class BlogPage(Handler):
+    def render_front(self, page):
+        if page:
+            page=int(page)
+        else:
+            page=1
+
+        limit=5
+
+        if page == 1:
+            offset = 0
+        else:
+            offset=(page-1)*5
+
+        blogs = get_posts(limit,offset)
+        offset=(page*5)
+        count = blogs.count(offset=offset, limit=limit)
+
+        self.render('blog.html', blogs=blogs, page=page, count=count)
 
     def get(self):
-        self.render_front()
+        page=self.request.get('page')
+        self.render_front(page)
 
 
 class NewPost(Handler):
@@ -80,6 +102,6 @@ class ViewPostHandler(Handler):
         #self.response.write(id)
 
 app = webapp2.WSGIApplication([
-    ('/', MainPage), ('/newpost', NewPost),
+    ('/', MainPage), ('/blog', BlogPage), ('/newpost', NewPost),
     webapp2.Route('/blog/<id:\d+>', ViewPostHandler)
 ], debug=True)

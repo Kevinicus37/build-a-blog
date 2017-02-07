@@ -12,5 +12,15 @@
     <p>{{blog.blog_post}}</p>
 </div>
 {% endfor %}
-<p><a href="/newpost">Create a new post.</a></p>
+<nav>
+    {% if page > 1 %}
+    <a href='/blog?page={{page-1}}'>prev</a>
+        {% if count > 0 %}
+            &nbsp;&nbsp;|&nbsp;&nbsp;
+        {% endif %}
+    {% endif %}
+    {% if count > 0 %}
+    <a href='/blog?page={{page+1}}'>next</a>
+    {% endif %}
+</nav>
 {% endblock %}
