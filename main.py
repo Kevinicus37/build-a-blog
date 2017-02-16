@@ -51,21 +51,18 @@ class MainPage(Handler):
 
 class BlogPage(Handler):
     def render_front(self, page):
+        offset=0
+        page_size=5
+
         if page:
             page=int(page)
+            offset=(page-1)*5
         else:
             page=1
 
-        limit=5
-
-        if page == 1:
-            offset = 0
-        else:
-            offset=(page-1)*5
-
-        blogs = get_posts(limit,offset)
+        blogs = get_posts(page_size,offset)
         offset=(page*5)
-        count = blogs.count(offset=offset, limit=limit)
+        count = blogs.count(offset=offset, limit=page_size)
 
         self.render('blog.html', blogs=blogs, page=page, count=count)
 
@@ -98,8 +95,14 @@ class ViewPostHandler(Handler):
     def get(self, id):
         id=int(id)
         current_post = Blog.get_by_id(id)
-        self.render('post.html', current_post=current_post)
-        #self.response.write(id)
+
+        if current_post:
+            self.render('post.html', current_post=current_post)
+
+        else:
+            error = "there is no post with id %s" % id
+            self.render('404.html', error=error)
+
 
 app = webapp2.WSGIApplication([
     ('/', MainPage), ('/blog', BlogPage), ('/newpost', NewPost),
